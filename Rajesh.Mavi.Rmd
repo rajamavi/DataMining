@@ -1,0 +1,217 @@
+---
+title: "CS 422 Home Work 3"
+author: "Rajesh Mavi"
+output:
+  html_document:
+    toc: yes
+    df_print: paged
+  html_notebook:
+    toc: yes
+    toc_float: yes
+---
+
+<!-- More information in R Markdown can be found at:
+1. https://www.ssc.wisc.edu/sscc/pubs/RFR/RFR_RMarkdown.html  This is 
+   the place to start since it is a short tutorial.
+2. https://rmarkdown.rstudio.com/index.html This contains a longer 
+   tutorial.  Take a look at the cheatsheet in 
+   https://rmarkdown.rstudio.com/lesson-15.html, it is a concise 
+   reference of R Markdown on two pages.
+<-->
+
+### Part 2.1 Install package ISLR. This package contains a dataset called Auto.
+```{r}
+library(ISLR)
+head(Auto)
+```
+
+```{r}
+set.seed(1122)
+index <- sample(1:nrow(Auto),0.95*dim(Auto)[1])
+train.df <- Auto[index,]
+test.df <- Auto[-index,]
+```
+
+### Part 2.1 (a) From the training dataset, create a model using all the predictors except name to predict mpg.
+```{r}
+model <- lm(mpg ~ . -name, data = train.df)
+```
+
+### Part 2.1 (a) (i) Why is using name as a predictor not a reasonable thing to do?
+1. Mileage of a vehicle does not depends on a name of the vehicle.
+2. Attribute 'name' is not correlated with mileage and does not significantly help to predict mileage. That's why it is not reasonable to take 'name' as a predictor.
+
+### Part 2.1 (a) (ii) Print the summary of the regression model, and comment on how well the model fits the data by studying the R^2 , RSE and RMSE. (Print out the values of R2 , RSE and RMSE.)
+
+```{r}
+summ <- summary(model)
+summ
+cat("R square : ",summ$r.squared,"\n")
+cat("Adjusted R square : ",summ$adj.r.squared,"\n")
+cat("RSE : ",summ$sigma,"\n")
+cat("RMSE : ",sqrt(mean((model$residuals)^2)))
+```
+1. R square means the correlation between predicted and actual values. It should be nearer to 1. For this particular model the value of R square is 0.817 hence, model is good fitted to data.  
+2. The residual standard error (RSE) is a way to measure the standard deviation of the residuals.
+3. Root Mean Square Error (RMSE) is also the standard deviation of the residuals. RSE and RMSE both should be as low as possible.  
+4. For this particular model, by studying R square, RSE and RMSE, It seems that model has fitted to data quite well. 
+
+### Part 2.1 (a) (iii) Plot the residuals of the model.
+```{r}
+plot(model,1)
+```
+
+### Part 2.1 (a) (iv) Plot a histogram of the residuals of the model. Does the histogram follow a Gaussian distribution? What can you say about the distribution of the residuals?
+```{r}
+hist(model$residuals,main = "Histogram of Residuals", xlab = "Residulas", col = rainbow(10), freq = F)
+lines(density(model$residuals))
+```
+
+
+As shown in histogram, Residuals follow Gaussian distribution.
+Density is high nearby zero, it means residuals are nicely clustered around zero line.It indicates our model is good fitted to data.
+
+### Part 2.1 (b) Using the regression model you have created in (a), your aim is to narrow down the features to the 3 attributes will act as the best predictors for regressing on mpg.
+```{r}
+summ
+```
+
+
+### Part 2.1 (b) (i) Determine which predictors are statistically significant and which are not. Eliminate those that are not statistically significant and create a new model using only those 3 predictors that you believe are statistically significant.
+1. As per the summary of previous model it appears that, the p value of predictor "cylinders" is 0.12, "horsepower" is 0.22 and "acceleration" is 0.39 which is greater than 0.1.  
+2. It means predictors "cylinder", "horsepower", "acceleration" are not statistically significant enough to predict response variable.  
+3. So, we can eliminate these three to narrow down the features. 
+4. Predictor "displacement" is also a significant but not as statistically significant as predictors "weight", "year", "origin" are.  
+5. So, we can eliminate "displacement" too.  
+6. Now, We can form a new model based on predictors which are statistically significant ie. "weight", "year", "origin".
+
+```{r}
+new.model <- lm(mpg ~ weight+year+origin,data = train.df)
+```
+
+### Part 2.1 (b)(ii) Print the summary of the regression model created in (b)(i) and comment on how well the model fits the data by studying the R2 , RSE and RMSE. (Print out the values of R2 , RSE, and RMSE.)
+
+```{r}
+new.summ <- summary(new.model)
+new.summ
+cat("R square : ",new.summ$r.squared,"\n")
+cat("Adjusted R square : ",new.summ$adj.r.squared,"\n")
+cat("RSE : ",new.summ$sigma,"\n")
+cat("RMSE : ",sqrt(mean((new.model$residuals)^2)))
+```
+1. R square value is 0.813 which is greater than 1.  
+2. RSE and RMSE are nearby zero.  
+3. For this particular model, by studying R square, RSE and RMSE, It seems that model has fitted to data quite well.  
+
+### Part 2.1 (b)(iii) Plot the residuals of the model.
+Best fit line of residuals is little curvy.  
+Residuals are clustered around zero line. 
+
+```{r}
+plot(new.model,1)
+```
+
+### Part 2.1 (b)(iv) Plot a histogram of the residuals of the model. Does the histogram follow a Gaussian distribution? What can you say about the distribution of the residuals?
+```{r}
+hist(new.model$residuals,main = "Histogram of Residuals", xlab = "Residulas", col = rainbow(10), freq = F)
+lines(density(new.model$residuals))
+```
+
+
+As shown in histogram, Residuals follow Gaussian distribution.   
+Density is high nearby zero, it means residuals are nicely clustered around zero line.
+It indicates our model is good fitted to data.  
+
+
+### Part 2.1 (b)(v) Comparing the summaries of the model produced in (a) and in (b), including residual analysis of each model. Which model do you think is better, and why?
+Comparing summary of first model and second model,  
+1. The F-statistic of model 1 is 232.2 and The F-statistic of model 2 is 531.8.  
+F statistic of model 2 is greater than model 1 which means all the predictors are statistically significant of model 2 to predict response variable.   
+2. the p value for both model is nearly zero.  
+3. But there is no improvement on RSE and adjusted R squared values of both the models.  
+4. As F Statistics of model 2 have been improved from 232.2 to 531.8.  
+5. Both the residual plot of model 1 and model 2 are same. There is no significant difference between them.  
+6. It appears that density curve of residuals of model 2 is little narrower as compare to model 1.
+
+#### As per the comparison, model 2 is better than model 1. 
+
+### Part 2.1 (c) Using the predict() method, fit the test dataset to the model you created in (b) and perform the analysis below.
+#### Predicted values of test sample 
+
+```{r}
+pred <- predict.lm(new.model, test.df[,c("weight","year","origin")], interval = "confidence")
+pred
+```
+
+#### New Dataframe is created
+```{r}
+df <- data.frame("Prediction"=round(pred[,"fit"],2),"Response"=test.df$mpg)
+df
+```
+
+#### Add confidence intervals in new dataframe 
+```{r}
+df <- cbind(df, round(pred[,c(2,3)],2))
+df
+```
+
+### Part 2.1 (d) Count how many of the fitted values matched the mpg in the test dataset at a 95% confidence level by creating confidence intervals.
+
+```{r}
+f <- function(x) {
+  if(x[2]>x[3] && x[2]<x[4])
+  {
+    return(1)
+  }
+  else{
+    return(0)
+  }}
+
+res <- apply(df,1,f)
+df$Matches <- res
+df
+```
+
+```{r}
+cat("Total observations correctly predicted: ",sum(df$Matches))
+```
+
+### Part 2.1 (e) Follow the same instructions in (d) except this time, you will be using a prediction interval
+#### Predicted values of test sample of second model
+
+```{r}
+pred2 <- predict.lm(new.model, test.df[,c("weight","year","origin")], interval = "prediction")
+pred2
+```
+
+#### Create new Dataframe
+```{r}
+df2 <- data.frame("Prediction"=round(pred2[,"fit"],2),"Response"=test.df$mpg)
+df2
+```
+
+#### Add prediction intervals in new dataframe 
+```{r}
+df2 <- cbind(df2, round(pred2[,c(2,3)],2))
+df2
+```
+
+#### Check matching
+```{r}
+res2 <- apply(df2,1,f)
+df2$Matches <- res2
+df2
+```
+
+```{r}
+cat("Total observations correctly predicted: ",sum(df2$Matches))
+```
+
+### Part 2.1 (f) Comment on the results of (d) and (e):
+### Part 2.1 (f)(i) Which of (d) or (e) results in more matches?
+Result (E) has more matches which is 20, than result (D) which is 7.
+
+### Part 2.1 (f)(ii) Why?
+1.In (D), we calculate matches based on confidence interval and in (E) based on prediction interval  
+2. Confidence intervals tell us how well we have determined a parameter of interest, such as a mean or regression coefficient Whereas, Prediction intervals tell us where we can expect to see the next data point sampled.  
+3. So, the range of prediction interval is always more than confidence interval and hence, actual values are more likely to fall under prediction interval.
